@@ -1,0 +1,31 @@
+TASK 14 – QUICK EXPLANATION NOTES
+
+1. User selects image in React.
+2. URL.createObjectURL(file) shows instant temporary preview.
+3. On submit React creates FormData.
+4. FormData sends the real file to POST /api/upload.
+5. Flask checks allowed extension and 2 MB limit.
+6. secure_filename cleans the original filename.
+7. UUID creates a unique filename to avoid overwrite conflicts.
+8. Flask saves the file in backend/static/uploads.
+9. Flask returns a relative path such as /static/uploads/abc123.jpg.
+10. React sends this relative path in POST /api/products or PUT /api/products/:id.
+11. MySQL stores only image_url, not the actual image.
+12. Home and Product Detail display:
+    http://localhost:5000 + product.image_url
+13. After refresh React fetches the saved path again, so the image persists.
+14. When replacing an image, upload the new image first, update the DB path, then delete the old physical image.
+15. useToast shows success/error feedback and disappears automatically after 3 seconds.
+
+POSTMAN – REPLACE WRONG IMAGE
+
+A. GET /api/products/1 → note old image_url.
+B. POST /api/upload → Body form-data, key=image, type=File.
+C. Copy returned new image_url.
+D. PUT /api/products/1 → raw JSON with new image_url.
+E. POST /api/delete-image → raw JSON with old image_url.
+F. GET /api/products/1 → verify new path.
+
+STANDUP
+
+Good morning everyone. Yesterday I completed the Task 14 backend setup and tested the image upload API using Postman. Today I am working on product APIs, image replacement, and frontend integration with instant preview and real file upload. Tomorrow I will complete the Home and Product Detail display, final testing, README, and submission. Currently, I don’t have any blockers.
