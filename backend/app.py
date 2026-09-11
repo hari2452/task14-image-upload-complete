@@ -232,24 +232,72 @@ def get_products():
     cursor = None
 
     try:
+        # Task 15: pagination + server-side search
+        page = request.args.get("page", 1, type=int)
+        limit = request.args.get("limit", 8, type=int)
+        search = request.args.get("search", "").strip()
+
+        # Prevent invalid values
+        if page < 1:
+            page = 1
+
+        if limit < 1:
+            limit = 8
+
+        offset = (page - 1) * limit
+        search_value = f"%{search}%"
+
         db = get_db()
         cursor = db.cursor(dictionary=True)
 
+        # Count all matching products first
         cursor.execute("""
-            SELECT id, name, description, price,
-                   image_url, created_at
+            SELECT COUNT(*) AS total
             FROM products
+            WHERE name LIKE %s
+               OR description LIKE %s
+        """, (
+            search_value,
+            search_value
+        ))
+
+        total = cursor.fetchone()["total"]
+
+        # Fetch only the current page
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                description,
+                price,
+                image_url,
+                created_at
+            FROM products
+            WHERE name LIKE %s
+               OR description LIKE %s
             ORDER BY id DESC
-        """)
+            LIMIT %s OFFSET %s
+        """, (
+            search_value,
+            search_value,
+            limit,
+            offset
+        ))
 
         products = [
             serialize_product(product)
             for product in cursor.fetchall()
         ]
 
+        total_pages = (total + limit - 1) // limit
+
         return jsonify({
             "success": True,
-            "products": products
+            "products": products,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages
         }), 200
 
     except Exception as e:
